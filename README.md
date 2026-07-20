@@ -80,3 +80,14 @@ This project simulates a real-world IT + backend system by combining:
 * Security practices
 
 It reflects hands-on experience relevant to entry-level IT and software roles.
+
+## 📸 Screenshots
+
+### API Response (JSON Output)
+![API Response](screenshots/api-response.png)
+
+### Flask Server Running on Raspberry Pi
+![Flask Server](screenshots/flask-server-running.png)
+
+### Raspberry Pi Setup
+![Raspberry Pi Setup](screenshots/raspberry-pi-setup.jpeg)
