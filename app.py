@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -14,6 +14,10 @@ db = mysql.connector.connect(
     password=os.getenv("DB_PASSWORD"),
     database="health_manager"
 )
+
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 # Insert data
 @app.route('/add', methods=['POST'])

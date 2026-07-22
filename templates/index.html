@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Health Dashboard</title>
+
+<div id="summaryCards" style="
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin-bottom:40px;
+    flex-wrap:wrap;
+">
+
+  <div class="card">
+    <h3>Weight</h3>
+    <p id="latestWeight">--</p>
+  </div>
+
+  <div class="card">
+    <h3>BMI</h3>
+    <p id="latestBMI">--</p>
+  </div>
+
+  <div class="card">
+    <h3>Blood Sugar</h3>
+    <p id="latestSugar">--</p>
+  </div>
+
+  <div class="card">
+    <h3>Blood Pressure</h3>
+    <p id="latestBP">--</p>
+  </div>
+
+<style>
+
+.card {
+    width:180px;
+    padding:20px;
+    border-radius:10px;
+    background:#f2f2f2;
+    text-align:center;
+    box-shadow:0px 2px 5px gray;
+}
+
+.card h3 {
+    margin-bottom:10px;
+}
+
+.card p {
+    font-size:24px;
+    font-weight:bold;
+}
+
+</style>
+
+</div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="font-family: Arial; text-align: center;">
+
+
+<h3>Add Health Data</h3>
+
+<form id="healthForm" style="margin-bottom: 40px;">
+  <input type="number" id="systolic" placeholder="Systolic" required>
+  <input type="number" id="diastolic" placeholder="Diastolic" required>
+  <input type="number" id="sugar" placeholder="Blood Sugar" required>
+  <input type="number" id="weight" placeholder="Weight (lbs)" required>
+  <input type="number" id="height" placeholder="Height (inches)" required>
+  <button type="submit">Submit</button>
+</form>
+
+<label for="range">Select Range:</label>
+<select id="range">
+  <option value="all">All</option>
+  <option value="7">Last 7 Days</option>
+</select>
+
+
+<h2>Health Dashboard</h2>
+
+
+
+<div id="sugarContainer" style="width: 600px; height: 300px; margin: auto; margin-bottom: 40px;">
+    <canvas id="sugarChart"></canvas>
+</div>
+
+<div id="bpContainer" style="width: 600px; height: 300px; margin: auto; margin-bottom: 40px;">
+    <canvas id="bpChart"></canvas>
+</div>
+
+<div id="weightContainer" style="width: 600px; height: 300px; margin: auto;">
+    <canvas id="weightChart"></canvas>
+</div>
+
+
+<script>
+
+document.getElementById("healthForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+const weight = document.getElementById("weight").value;
+const height = document.getElementById("height").value;
+
+// BMI formula (US units)
+const bmi = (weight / (height * height)) * 703;
+
+
+let bmiCategory = "";
+
+if (bmi < 18.5) {
+    bmiCategory = "Underweight";
+} else if (bmi < 25) {
+    bmiCategory = "Normal";
+} else if (bmi < 30) {
+    bmiCategory = "Overweight";
+} else {
+    bmiCategory = "Obese";
+}
+
+let sugarStatus = "";
+
+const sugar = document.getElementById("sugar").value;
+
+if (sugar < 70) {
+    sugarStatus = "Low Blood Sugar";
+} else if (sugar <= 140) {
+    sugarStatus = "Good Range";
+} else {
+    sugarStatus = "High Blood Sugar";
+}
+
+alert(
+  "BMI: " + bmi.toFixed(2) +
+  "\nCategory: " + bmiCategory
+);
+
+  const data = {
+    systolic: document.getElementById("systolic").value,
+    diastolic: document.getElementById("diastolic").value,
+    blood_sugar: document.getElementById("sugar").value,
+    weight: weight,
+    height: height,
+    bmi: bmi.toFixed(2)
+  };
+
+
+// 1. Form Submit 
+
+  fetch('/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  })
+ .then(async res => {
+    const text = await res.text();
+    console.log(text);
+
+    if (!res.ok) {
+        throw new Error(text);
+    }
+
+    return JSON.parse(text);
+})
+.then(response => {
+    alert(
+    "Data saved!\n\n" +
+    "BMI: " + bmi.toFixed(2)
+     );
+    location.reload();
+})
+.catch(error => {
+    console.error(error);
+    alert("Error adding data");
+}); 
+});
+
+// 2. Load Data 
+
+function loadData() {
+  fetch('/data')
+    .then(res => res.json())
+    .then(data => {
+
+// Get latest health entry
+if (data.length > 0) {
+
+    const latest = data[data.length - 1];
+
+    document.getElementById("latestWeight").innerHTML =
+        latest.weight_lb + " lbs";
+
+    document.getElementById("latestBMI").innerHTML =
+        latest.bmi;
+
+    document.getElementById("latestSugar").innerHTML =
+        latest.blood_sugar_mg_dl + " mg/dL";
+
+    document.getElementById("latestBP").innerHTML =
+        latest.systolic + "/" + latest.diastolic;
+}
+
+
+      const range = document.getElementById("range").value;
+
+      // Convert dates
+      const now = new Date();
+
+      let filteredData = data;
+
+      if (range === "7") {
+        filteredData = data.filter(item => {
+          const itemDate = new Date(item.date_time);
+          const diffTime = now - itemDate;
+          const diffDays = diffTime / (1000 * 60 * 60 * 24);
+          return diffDays <= 7;
+        });
+      }
+
+      const labels = filteredData.map(item => item.date_time);
+      const sugar = filteredData.map(item => item.blood_sugar_mg_dl);
+      const systolic = filteredData.map(item => item.systolic);
+      const diastolic = filteredData.map(item => item.diastolic);
+      const weight = filteredData.map(item => item.weight_lb);
+
+      // Clear old charts
+      document.getElementById("sugarChart").remove();
+      document.getElementById("bpChart").remove();
+      document.getElementById("weightChart").remove();
+
+      document.getElementById("sugarContainer").innerHTML = '<canvas id="sugarChart"></canvas>';
+      document.getElementById("bpContainer").innerHTML = '<canvas id="bpChart"></canvas>';
+      document.getElementById("weightContainer").innerHTML = '<canvas id="weightChart"></canvas>';
+      
+     // Recreate charts
+
+      new Chart(document.getElementById('sugarChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Blood Sugar',
+            data: sugar,
+            borderWidth: 2
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      new Chart(document.getElementById('bpChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Systolic', data: systolic, borderWidth: 2 },
+            { label: 'Diastolic', data: diastolic, borderWidth: 2 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      new Chart(document.getElementById('weightChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Weight',
+            data: weight,
+            borderWidth: 2
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+    });
+}
+
+
+// 3. DROPDOWN CHANGE
+
+document.getElementById("range").addEventListener("change", loadData);
+
+// 4. INITIAL LOAD 
+
+loadData();
+
+
+</script>
+
+</body>
+</html>
