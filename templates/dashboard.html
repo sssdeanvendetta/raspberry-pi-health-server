@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+
+<h2>Health Dashboard</h2>
+
+
+
+<div id="sugarContainer" style="width: 600px; height: 300px; margin: auto; margin-bottom: 40px;">
+    <canvas id="sugarChart"></canvas>
+</div>
+
+<div id="bpContainer" style="width: 600px; height: 300px; margin: auto; margin-bottom: 40px;">
+    <canvas id="bpChart"></canvas>
+</div>
+
+<div id="weightContainer" style="width: 600px; height: 300px; margin: auto;">
+    <canvas id="weightChart"></canvas>
+</div>
+
+
+
+// 2. Load Data 
+
+function loadData() {
+  fetch('/data')
+    .then(res => res.json())
+    .then(data => {
+
+// Get latest health entry
+if (data.length > 0) {
+
+    const latest = data[data.length - 1];
+
+    document.getElementById("latestWeight").innerHTML =
+        latest.weight_lb + " lbs";
+
+    document.getElementById("latestBMI").innerHTML =
+        latest.bmi;
+
+    document.getElementById("latestSugar").innerHTML =
+        latest.blood_sugar_mg_dl + " mg/dL";
+
+    document.getElementById("latestBP").innerHTML =
+        latest.systolic + "/" + latest.diastolic;
+}
+
+
+      const range = document.getElementById("range").value;
+
+      // Convert dates
+      const now = new Date();
+
+      let filteredData = data;
+
+      if (range === "7") {
+        filteredData = data.filter(item => {
+          const itemDate = new Date(item.date_time);
+          const diffTime = now - itemDate;
+          const diffDays = diffTime / (1000 * 60 * 60 * 24);
+          return diffDays <= 7;
+        });
+      }
+
+      const labels = filteredData.map(item => item.date_time);
+      const sugar = filteredData.map(item => item.blood_sugar_mg_dl);
+      const systolic = filteredData.map(item => item.systolic);
+      const diastolic = filteredData.map(item => item.diastolic);
+      const weight = filteredData.map(item => item.weight_lb);
+
+      // Clear old charts
+      document.getElementById("sugarChart").remove();
+      document.getElementById("bpChart").remove();
+      document.getElementById("weightChart").remove();
+
+      document.getElementById("sugarContainer").innerHTML = '<canvas id="sugarChart"></canvas>';
+      document.getElementById("bpContainer").innerHTML = '<canvas id="bpChart"></canvas>';
+      document.getElementById("weightContainer").innerHTML = '<canvas id="weightChart"></canvas>';
+      
+     // Recreate charts
+
+      new Chart(document.getElementById('sugarChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Blood Sugar',
+            data: sugar,
+            borderWidth: 2
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      new Chart(document.getElementById('bpChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Systolic', data: systolic, borderWidth: 2 },
+            { label: 'Diastolic', data: diastolic, borderWidth: 2 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      new Chart(document.getElementById('weightChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Weight',
+            data: weight,
+            borderWidth: 2
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+    });
+}
+
+</body>
+</html>
+
+
