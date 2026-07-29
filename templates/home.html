@@ -2,16 +2,22 @@
 <html>
 <body>
 
-<h1>Welcome to DiaTrack</h1>
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Home</h2>
+<p>Welcome to your health tracker</p>
+{% endblock %}
 
 <div class="summary-card">
     <h3>Latest Weight</h3>
     <p id="latestWeight">--</p>
 </div>
 
-<a href="/add-health">Add Health Data</a>
-<a href="/dashboard">View Dashboard</a>
-<a href="/history">View History</a>
 
 </body>
 </html>

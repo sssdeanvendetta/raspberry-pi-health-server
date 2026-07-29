@@ -20,10 +20,13 @@ def home():
     return render_template("home.html")
 
 
-@app.route('/add-health')
+@app.route('/add-health', methods=['GET', 'POST'])
 def add_health():
-    return render_template("add_health.html")
+    if request.method == 'POST':
+        # save data
+        return redirect('/dashboard')
 
+    return render_template('add_health.html')
 
 @app.route('/dashboard')
 def dashboard():

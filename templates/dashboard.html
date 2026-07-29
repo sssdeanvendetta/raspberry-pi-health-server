@@ -3,89 +3,131 @@
 <body>
 
 
-<h2>Health Dashboard</h2>
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 
+{% extends "base.html" %}
 
+{% block content %}
+<h2>Dashboard</h2>
 
-<div id="sugarContainer" style="width: 600px; height: 300px; margin: auto; margin-bottom: 40px;">
-    <canvas id="sugarChart"></canvas>
-</div>
-
-<div id="bpContainer" style="width: 600px; height: 300px; margin: auto; margin-bottom: 40px;">
-    <canvas id="bpChart"></canvas>
-</div>
-
-<div id="weightContainer" style="width: 600px; height: 300px; margin: auto;">
-    <canvas id="weightChart"></canvas>
+<div style="width: 700px; height: 350px; margin: auto;">
+  <canvas id="myChart"></canvas>
 </div>
 
 
+
+<div style="text-align:center; margin-bottom:20px;">
+  <button onclick="loadChart('sugar')">Blood Sugar</button>
+  <button onclick="loadChart('bp')">Blood Pressure</button>
+  <button onclick="loadChart('weight')">Weight</button>
+</div>
+
+
+<div style="width: 700px; height: 350px; margin: auto;">
+  <canvas id="myChart"></canvas>
+</div>
+
+<style>
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+</style>
+
+<canvas id="myChart"></canvas>
 
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+let chart;
 
+// GLOBAL data storage
+let labels = [];
+let sugar = [];
+let systolic = [];
+let diastolic = [];
+let weight = [];
 
+// Format date nicely
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  });
+}
+
+// Load data once
 function loadData() {
   fetch('/data')
     .then(res => res.json())
     .then(data => {
 
-      const filteredData = data;
+      labels = data.map(item => formatDate(item.date_time));
+      sugar = data.map(item => item.blood_sugar_mg_dl);
+      systolic = data.map(item => item.systolic);
+      diastolic = data.map(item => item.diastolic);
+      weight = data.map(item => item.weight_lb);
 
-      const labels = filteredData.map(item => item.date_time);
-      const sugar = filteredData.map(item => item.blood_sugar_mg_dl);
-      const systolic = filteredData.map(item => item.systolic);
-      const diastolic = filteredData.map(item => item.diastolic);
-      const weight = filteredData.map(item => item.weight_lb);
-
-     
-       new Chart(document.getElementById('sugarChart'), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Blood Sugar',
-            data: sugar,
-            borderWidth: 2
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-
-      new Chart(document.getElementById('bpChart'), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            { label: 'Systolic', data: systolic, borderWidth: 2 },
-            { label: 'Diastolic', data: diastolic, borderWidth: 2 }
-          ]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-
-      new Chart(document.getElementById('weightChart'), {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'Weight',
-            data: weight,
-            borderWidth: 2
-          }]
-        },
-        options: { responsive: true, maintainAspectRatio: false }
-      });
-
+      // Load default chart
+      loadChart('sugar');
     });
 }
 
-loadData();
+// Switch chart
+function loadChart(type) {
+  let chartData;
+  let chartLabel;
 
-</script>
-</body>
+  if (type === 'sugar') {
+    chartData = sugar;
+    chartLabel = "Blood Sugar";
+  } else if (type === 'bp') {
+    chartData = systolic;
+    chartLabel = "Systolic BP";
+  } else if (type === 'weight') {
+    chartData = weight;
+    chartLabel = "Weight";
+  }
+
+  if (chart) {
+    chart.destroy();
+  }
+
+  const ctx = document.getElementById('myChart').getContext('2d');
+
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: chartLabel,
+        data: chartData,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+}
+
+loadData();
+</script></body>
+
+{% endblock %}
 </html>
 
 

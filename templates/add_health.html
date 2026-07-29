@@ -2,19 +2,38 @@
 <html>
 <body>
 
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
 
 
-<h3>Add Health Data</h3>
+{% extends "base.html" %}
 
-<form id="healthForm" style="margin-bottom: 40px;">
-  <input type="number" id="systolic" placeholder="Systolic" required>
-  <input type="number" id="diastolic" placeholder="Diastolic" required>
-  <input type="number" id="sugar" placeholder="Blood Sugar" required>
-  <input type="number" id="weight" placeholder="Weight (lbs)" required>
-  <input type="number" id="height" placeholder="Height (inches)" required>
-  <button type="submit">Submit</button>
+{% block title %}
+Add Health Data
+{% endblock %}
+
+{% block content %}
+
+<h2>Add Health Data</h2>
+
+<form method="POST">
+
+    <input type="number" name="systolic" placeholder="Systolic" required>
+
+    <input type="number" name="diastolic" placeholder="Diastolic" required>
+
+    <input type="number" name="blood_sugar" placeholder="Blood Sugar" required>
+
+    <input type="number" name="weight" placeholder="Weight" required>
+
+    <input type="number" name="height" placeholder="Height" required>
+
+    <button type="submit">Save</button>
+
 </form>
 
+{% endblock %}
 
 <script>
 
