@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+
+<h2>Health Dashboard</h2>
+
+
+
+<div id="sugarContainer" style="width: 600px; height: 300px; margin: auto; margin-bottom: 40px;">
+    <canvas id="sugarChart"></canvas>
+</div>
+
+<div id="bpContainer" style="width: 600px; height: 300px; margin: auto; margin-bottom: 40px;">
+    <canvas id="bpChart"></canvas>
+</div>
+
+<div id="weightContainer" style="width: 600px; height: 300px; margin: auto;">
+    <canvas id="weightChart"></canvas>
+</div>
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+
+function loadData() {
+  fetch('/data')
+    .then(res => res.json())
+    .then(data => {
+
+      const filteredData = data;
+
+      const labels = filteredData.map(item => item.date_time);
+      const sugar = filteredData.map(item => item.blood_sugar_mg_dl);
+      const systolic = filteredData.map(item => item.systolic);
+      const diastolic = filteredData.map(item => item.diastolic);
+      const weight = filteredData.map(item => item.weight_lb);
+
+     
+       new Chart(document.getElementById('sugarChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Blood Sugar',
+            data: sugar,
+            borderWidth: 2
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      new Chart(document.getElementById('bpChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Systolic', data: systolic, borderWidth: 2 },
+            { label: 'Diastolic', data: diastolic, borderWidth: 2 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      new Chart(document.getElementById('weightChart'), {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Weight',
+            data: weight,
+            borderWidth: 2
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+    });
+}
+
+loadData();
+
+</script>
+</body>
+</html>
+
+

@@ -17,7 +17,22 @@ db = mysql.connector.connect(
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template("home.html")
+
+
+@app.route('/add-health')
+def add_health():
+    return render_template("add_health.html")
+
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template("dashboard.html")
+
+@app.route('/history')
+def history():
+    return render_template('history.html')
+
 
 # Insert data
 @app.route('/add', methods=['POST'])
