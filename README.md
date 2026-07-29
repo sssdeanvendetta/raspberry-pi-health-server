@@ -5,6 +5,25 @@
 This project is a full-stack health monitoring system deployed on a Raspberry Pi 4.
 It collects and stores health metrics such as blood sugar, blood pressure, and weight, and exposes them through a REST API.
 
+## One Command Startup
+
+The application can be started using:
+
+```bash
+chmod +x run.sh
+./run.sh
+
+## Features
+
+- Blood glucose tracking
+- Blood pressure tracking
+- Weight tracking
+- BMI calculation
+- Interactive charts using Chart.js
+- REST API endpoints
+- MariaDB data storage
+- Raspberry Pi deployment
+
 ## 🧠 What This Demonstrates
 
 * Linux server administration (SSH, networking)
@@ -15,9 +34,15 @@ It collects and stores health metrics such as blood sugar, blood pressure, and w
 
 ## 🏗️ Architecture
 
-Client (Browser / App)
-→ Flask API (Raspberry Pi)
-→ MariaDB Database
+Browser
+|↓
+Flask Web Server / REST API
+|
+↓
+MariaDB Database
+|
+↓
+Raspberry Pi 4 Linux Server
 
 ## ⚙️ Tech Stack
 
@@ -26,6 +51,21 @@ Client (Browser / App)
 * MariaDB
 * Linux (Raspberry Pi OS)
 * Git & GitHub
+
+## Project Structure
+raspberry-pi-health-server/
+│
+├── app.py
+├── run.sh
+├── requirements.txt
+├── templates/
+|   ├── home.html
+│   └── dashboard.html
+├── static/
+│   ├── css/
+│   └── js/
+└── screenshots/
+
 
 ## 🔌 API Endpoints
 
@@ -65,10 +105,11 @@ Example:
 
 ## 📈 Future Improvements
 
-* Frontend dashboard (Chart.js)
 * User authentication system
 * Cloud deployment (AWS or Azure)
 * Automated backups & monitoring
+* Mobile application integration
+* Docker deployment
 
 ## 💼 Why This Project Matters
 
