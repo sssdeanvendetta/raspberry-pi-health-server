@@ -1,16 +1,35 @@
-<!DOCTYPE html>
-<html>
-<body>
-
-
-<head>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-
 {% extends "base.html" %}
 
 {% block content %}
 <h2>Dashboard</h2>
+
+<div class="summary-container">
+
+    <div class="card">
+        <h3 id="avgLabel">Average</h3>
+        <p id="avgValue">--</p>
+    </div>
+
+    <div class="card">
+        <h3 id="maxLabel">Highest</h3>
+        <p id="maxValue">--</p>
+    </div>
+
+    <div class="card">
+        <h3 id="minLabel">Lowest</h3>
+        <p id="minValue">--</p>
+    </div>
+
+</div>
+
+
+<select id="dateFilter" onchange="loadData()">
+
+    <option value="7">Last 7 Days</option>
+    <option value="30">Last 30 Days</option>
+    <option value="all">All Data</option>
+
+</select>
 
 <div style="width: 700px; height: 350px; margin: auto;">
   <canvas id="myChart"></canvas>
@@ -19,15 +38,12 @@
 
 
 <div style="text-align:center; margin-bottom:20px;">
-  <button onclick="loadChart('sugar')">Blood Sugar</button>
-  <button onclick="loadChart('bp')">Blood Pressure</button>
-  <button onclick="loadChart('weight')">Weight</button>
+  <button onclick="loadChart('sugar')" id="btn-sugar">Blood Sugar</button>
+  <button onclick="loadChart('bp')" id="btn-bp">Blood Pressure</button>
+  <button onclick="loadChart('weight')" id="btn-weight">Weight</button>
 </div>
 
 
-<div style="width: 700px; height: 350px; margin: auto;">
-  <canvas id="myChart"></canvas>
-</div>
 
 <style>
 button {
@@ -45,89 +61,215 @@ button:hover {
 }
 </style>
 
-<canvas id="myChart"></canvas>
-
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+
+
 <script>
+
+function setActiveButton(type) {
+    document.querySelectorAll("button").forEach(btn => {
+        btn.style.backgroundColor = "#007bff";
+    });
+
+    document.getElementById("btn-" + type).style.backgroundColor = "#28a745";
+}
+
 let chart;
 
-// GLOBAL data storage
 let labels = [];
 let sugar = [];
 let systolic = [];
 let diastolic = [];
 let weight = [];
 
-// Format date nicely
+
 function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric'
-  });
-}
-
-// Load data once
-function loadData() {
-  fetch('/data')
-    .then(res => res.json())
-    .then(data => {
-
-      labels = data.map(item => formatDate(item.date_time));
-      sugar = data.map(item => item.blood_sugar_mg_dl);
-      systolic = data.map(item => item.systolic);
-      diastolic = data.map(item => item.diastolic);
-      weight = data.map(item => item.weight_lb);
-
-      // Load default chart
-      loadChart('sugar');
+    return new Date(dateStr).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
     });
 }
 
-// Switch chart
-function loadChart(type) {
-  let chartData;
-  let chartLabel;
 
-  if (type === 'sugar') {
-    chartData = sugar;
-    chartLabel = "Blood Sugar";
-  } else if (type === 'bp') {
-    chartData = systolic;
-    chartLabel = "Systolic BP";
-  } else if (type === 'weight') {
-    chartData = weight;
-    chartLabel = "Weight";
-  }
+function updateSummary(values, unit) {
 
-  if (chart) {
-    chart.destroy();
-  }
+if (values.length === 0) {
+    document.getElementById("avgValue").innerHTML = "No data";
+    document.getElementById("maxValue").innerHTML = "No data";
+    document.getElementById("minValue").innerHTML = "No data";
+    return;
+}
+    const average =
+        values.reduce((a,b)=>a+b,0) / values.length;
 
-  const ctx = document.getElementById('myChart').getContext('2d');
 
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: chartLabel,
-        data: chartData,
-        borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
-  });
+    document.getElementById("avgValue").innerHTML =
+        average.toFixed(1) + " " + unit;
+
+
+    document.getElementById("maxValue").innerHTML =
+        Math.max(...values).toFixed(1) + " " + unit;
+
+
+    document.getElementById("minValue").innerHTML =
+        Math.min(...values).toFixed(1) + " " + unit;
 }
 
+
+
+function loadData() {
+
+    fetch('/data')
+    .then(res => res.json())
+    .then(data => {
+
+
+        const filter =
+            document.getElementById("dateFilter").value;
+
+
+        if(filter !== "all") {
+
+            const days = parseInt(filter);
+
+            const cutoff = new Date();
+
+            cutoff.setDate(
+                cutoff.getDate() - days
+            );
+
+            data = data.filter(item =>
+                new Date(item.date_time) >= cutoff
+            );
+        }
+
+
+        labels = data.map(item =>
+            formatDate(item.date_time)
+        );
+
+
+        sugar = data.map(item =>
+            Number(item.blood_sugar_mg_dl)
+        );
+
+
+        systolic = data.map(item =>
+            Number(item.systolic)
+        );
+
+
+        diastolic = data.map(item =>
+            Number(item.diastolic)
+        );
+
+
+        weight = data.map(item =>
+            Number(item.weight_lb)
+        );
+
+
+        loadChart('sugar');
+
+    });
+
+}
+
+
+
+function loadChart(type) {
+
+    setActiveButton(type);
+
+    let chartData;
+    let chartLabel;
+
+
+    if(type === 'sugar') {
+
+        chartData = sugar;
+        chartLabel = "Blood Sugar";
+
+        updateSummary(chartData, "mg/dL");
+
+    }
+
+
+    else if(type === 'bp') {
+
+        chartData = systolic;
+        chartLabel = "Systolic BP";
+
+        updateSummary(chartData, "mmHg");
+
+    }
+
+
+    else if(type === 'weight') {
+
+        chartData = weight;
+        chartLabel = "Weight";
+
+        updateSummary(chartData, "lbs");
+
+    }
+
+
+
+    if(chart) {
+        chart.destroy();
+    }
+
+
+    const ctx =
+        document.getElementById('myChart')
+        .getContext('2d');
+
+
+    chart = new Chart(ctx, {
+
+        type: 'line',
+
+        data: {
+
+            labels: labels,
+
+            datasets: [{
+
+                label: chartLabel,
+
+                data: chartData,
+
+                borderWidth: 2
+
+            }]
+        },
+
+
+        options: {
+
+            responsive:true,
+
+            maintainAspectRatio:false
+
+        }
+
+    });
+
+}
+
+
+
 loadData();
-</script></body>
+
+</script>
+
+
+
 
 {% endblock %}
-</html>
+
 
 

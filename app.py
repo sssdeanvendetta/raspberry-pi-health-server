@@ -15,6 +15,33 @@ db = mysql.connector.connect(
     database="health_manager"
 )
 
+
+def insert_health_data(systolic, diastolic, blood_sugar, weight, height, bmi):
+
+    cursor = db.cursor()
+
+    query = """
+    INSERT INTO health_metrics 
+    (systolic, diastolic, blood_sugar_mg_dl, weight_lb, height_in, bmi)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """
+
+    values = (
+        systolic,
+        diastolic,
+        blood_sugar,
+        weight,
+        height,
+        bmi
+    )
+
+    cursor.execute(query, values)
+    db.commit()
+
+    cursor.close()
+
+#Routes 
+
 @app.route('/')
 def home():
     return render_template("home.html")
@@ -25,13 +52,24 @@ def add_health():
 
     if request.method == 'POST':
 
-        # get form data
         systolic = request.form['systolic']
         diastolic = request.form['diastolic']
         blood_sugar = request.form['blood_sugar']
         weight = request.form['weight']
+        height = request.form['height']
 
-        # insert into database here
+        # Calculate BMI
+        height_m = float(height) * 0.0254
+        bmi = round(float(weight) * 0.453592 / (height_m ** 2), 2)
+
+        insert_health_data(
+            systolic,
+            diastolic,
+            blood_sugar,
+            weight,
+            height,
+            bmi
+        )
 
         return redirect('/dashboard')
 
@@ -48,16 +86,10 @@ def history():
 # Insert data
 @app.route('/add', methods=['POST'])
 def add_data():
+
     data = request.json
-    cursor = db.cursor()
 
-    query = """
-    INSERT INTO health_metrics 
-    (systolic, diastolic, blood_sugar_mg_dl, weight_lb, height_in, bmi)
-    VALUES (%s, %s, %s, %s, %s, %s)
-    """
-
-    values = (
+    insert_health_data(
         data['systolic'],
         data['diastolic'],
         data['blood_sugar'],
@@ -66,18 +98,27 @@ def add_data():
         data['bmi']
     )
 
-    cursor.execute(query, values)
-    db.commit()
-
     return jsonify({"message": "Data inserted successfully"})
 
+
 # Get data
-@app.route('/data', methods=['GET'])
+@app.route('/data')
 def get_data():
+
     cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM health_metrics ORDER BY date_time DESC")
-    result = cursor.fetchall()
-    return jsonify(result)
+
+    cursor.execute("""
+        SELECT *
+        FROM health_metrics
+        ORDER BY date_time ASC
+    """)
+
+    data = cursor.fetchall()
+
+    cursor.close()
+
+    return jsonify(data)
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
