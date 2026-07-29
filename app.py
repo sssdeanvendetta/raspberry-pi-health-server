@@ -29,6 +29,9 @@ def add_health():
 def dashboard():
     return render_template("dashboard.html")
 
+@app.route('/history')
+def history():
+    return render_template('history.html')
 
 
 # Insert data

@@ -16,6 +16,47 @@
 </form>
 
 
+<script>
+
+document.getElementById("healthForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const weight = parseFloat(document.getElementById("weight").value);
+    const height = parseFloat(document.getElementById("height").value);
+
+    const bmi = (weight / (height * height)) * 703;
+
+
+    const data = {
+        systolic: document.getElementById("systolic").value,
+        diastolic: document.getElementById("diastolic").value,
+        blood_sugar: document.getElementById("sugar").value,
+        weight: weight,
+        height: height,
+        bmi: bmi.toFixed(2)
+    };
+
+    fetch('/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+	.then(res => res.json())
+	.then(response => {
+	    alert("Data added!");
+	})
+	.catch(error => {
+	    console.error(error);
+	    alert("Something went wrong");
+	});
+
+
+});
+
+</script>
+
 
 
 </body>
