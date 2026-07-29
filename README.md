@@ -13,13 +13,15 @@ The application can be started using:
 chmod +x run.sh
 ./run.sh
 
-## Features
+## 📊 Dashboard Features
 
-- Blood glucose tracking
-- Blood pressure tracking
-- Weight tracking
-- BMI calculation
-- Interactive charts using Chart.js
+- Dynamic chart switching (Blood Sugar, BP, Weight)
+- Date range filtering (7, 30, All)
+- Real-time summary metrics:
+  - Average
+  - Highest
+  - Lowest
+- Chronological data visualization
 - REST API endpoints
 - MariaDB data storage
 - Raspberry Pi deployment
