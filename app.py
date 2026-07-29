@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect
 import mysql.connector
 import os
 from dotenv import load_dotenv
@@ -22,12 +22,20 @@ def home():
 
 @app.route('/add-health', methods=['GET', 'POST'])
 def add_health():
+
     if request.method == 'POST':
-        # save data
+
+        # get form data
+        systolic = request.form['systolic']
+        diastolic = request.form['diastolic']
+        blood_sugar = request.form['blood_sugar']
+        weight = request.form['weight']
+
+        # insert into database here
+
         return redirect('/dashboard')
 
     return render_template('add_health.html')
-
 @app.route('/dashboard')
 def dashboard():
     return render_template("dashboard.html")
