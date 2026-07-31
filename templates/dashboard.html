@@ -20,6 +20,11 @@
         <p id="minValue">--</p>
     </div>
 
+   <div class="card">
+        <h3>BMI</h3>
+        <p id="bmiValue">--</p>
+   </div>
+
 </div>
 
 
@@ -42,6 +47,7 @@
   <button onclick="loadChart('bp')" id="btn-bp">Blood Pressure</button>
   <button onclick="loadChart('weight')" id="btn-weight">Weight</button>
 </div>
+
 
 
 
@@ -83,6 +89,7 @@ let sugar = [];
 let systolic = [];
 let diastolic = [];
 let weight = [];
+let bmi = [];
 
 
 function formatDate(dateStr) {
@@ -169,6 +176,10 @@ function loadData() {
         weight = data.map(item =>
             Number(item.weight_lb)
         );
+
+       bmi = data.map(item =>
+         Number(item.bmi)
+       );
 
 
         loadChart('sugar');
@@ -260,11 +271,57 @@ function loadChart(type) {
 
 }
 
+function updateBMI() {
 
+    if (bmi.length === 0) {
+        document.getElementById("bmiValue").innerHTML = "--";
+        return;
+    }
+
+    let averageBMI =
+        bmi.reduce((a,b)=>a+b,0) / bmi.length;
+
+
+    document.getElementById("bmiValue").innerHTML =
+        averageBMI.toFixed(1);
+}
+
+updateBMI();
 
 loadData();
 
 </script>
+
+<table border="1" style="margin:auto; margin-top:30px;">
+<tr>
+  <th>Date</th>
+  <th>Systolic</th>
+  <th>Diastolic</th>
+  <th>Sugar</th>
+  <th>Weight</th>
+  <th>Actions</th>
+</tr>
+
+{% for item in data %}
+<tr>
+  <td>{{ item.date_time }}</td>
+  <td>{{ item.systolic }}</td>
+  <td>{{ item.diastolic }}</td>
+  <td>{{ item.blood_sugar_mg_dl }}</td>
+  <td>{{ item.weight_lb }}</td>
+
+  <td>
+    <a href="/edit/{{ item.id }}">Edit</a>
+
+    <form action="/delete/{{ item.id }}" method="POST" style="display:inline;">
+      <button onclick="return confirm('Delete this record?')">
+        Delete
+      </button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+</table>
 
 
 

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}
+Edit Health Data
+{% endblock %}
+
+{% block content %}
+
+<h2>Edit Health Record</h2>
+
+<form method="POST" action="/update/{{ record.id }}" class="form-grid">
+
+  <div class="form-group">
+    <label>Systolic</label>
+    <input type="number" name="systolic" value="{{ record.systolic }}">
+  </div>
+
+  <div class="form-group">
+    <label>Diastolic</label>
+    <input type="number" name="diastolic" value="{{ record.diastolic }}">
+  </div>
+
+  <div class="form-group">
+    <label>Blood Sugar</label>
+    <input type="number" name="blood_sugar" value="{{ record.blood_sugar_mg_dl }}">
+  </div>
+
+  <div class="form-group">
+    <label>Weight</label>
+    <input type="number" name="weight" value="{{ record.weight_lb }}">
+  </div>
+
+  <div class="form-group">
+    <label>Height</label>
+    <input type="number" name="height" value="{{ record.height_in }}">
+  </div>
+
+  <div class="form-group full-width">
+    <button type="submit">Update</button>
+  </div>
+
+</form>
+
+{% endblock %}

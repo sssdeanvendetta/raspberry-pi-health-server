@@ -16,14 +16,14 @@ db = mysql.connector.connect(
 )
 
 
-def insert_health_data(systolic, diastolic, blood_sugar, weight, height, bmi):
+def insert_health_data(systolic, diastolic, blood_sugar, weight, height):
 
     cursor = db.cursor()
 
     query = """
     INSERT INTO health_metrics 
-    (systolic, diastolic, blood_sugar_mg_dl, weight_lb, height_in, bmi)
-    VALUES (%s, %s, %s, %s, %s, %s)
+    (systolic, diastolic, blood_sugar_mg_dl, weight_lb, height_in)
+    VALUES (%s, %s, %s, %s, %s)
     """
 
     values = (
@@ -31,8 +31,7 @@ def insert_health_data(systolic, diastolic, blood_sugar, weight, height, bmi):
         diastolic,
         blood_sugar,
         weight,
-        height,
-        bmi
+        height
     )
 
     cursor.execute(query, values)
@@ -74,9 +73,22 @@ def add_health():
         return redirect('/dashboard')
 
     return render_template('add_health.html')
+
 @app.route('/dashboard')
 def dashboard():
-    return render_template("dashboard.html")
+
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT *
+        FROM health_metrics
+        ORDER BY date_time DESC
+    """)
+
+    data = cursor.fetchall()
+    cursor.close()
+
+    return render_template("dashboard.html", data=data)
 
 @app.route('/history')
 def history():
@@ -117,8 +129,82 @@ def get_data():
 
     cursor.close()
 
+ # Compute BMI dynamically
+    for row in data:
+
+        weight = row.get('weight_lb')
+        height = row.get('height_in')
+
+        if weight and height:
+            height_m = float(height) * 0.0254
+            bmi = float(weight) * 0.453592 / (height_m ** 2)
+
+            row['bmi'] = round(bmi, 2)
+        else:
+            row['bmi'] = None
+
     return jsonify(data)
 
+# delete
+@app.route('/delete/<int:id>', methods=['POST'])
+def delete_record(id):
+
+    cursor = db.cursor()
+
+    cursor.execute(
+        "DELETE FROM health_metrics WHERE id = %s",
+        (id,)
+    )
+
+    db.commit()
+    cursor.close()
+
+    return redirect('/dashboard')
+
+# edit (GET)
+@app.route('/edit/<int:id>')
+def edit(id):
+
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute(
+        "SELECT * FROM health_metrics WHERE id = %s",
+        (id,)
+    )
+
+    record = cursor.fetchone()
+    cursor.close()
+    print(record)
+
+    return render_template('edit.html', record=record)
+
+# Update (POST) 
+@app.route('/update/<int:id>', methods=['POST'])
+def update(id):
+
+    systolic = request.form['systolic']
+    diastolic = request.form['diastolic']
+    blood_sugar = request.form['blood_sugar']
+    weight = request.form['weight']
+    height = request.form['height']
+ 
+    height_m = float(height) * 0.0254
+    bmi = round(float(weight) * 0.453592 / (height_m ** 2), 2)
+
+    cursor = db.cursor()
+
+    cursor.execute("""
+     UPDATE health_metrics
+      SET systolic=%s,
+         diastolic=%s,
+         blood_sugar_mg_dl=%s,
+         weight_lb=%s,
+         height_in=%s,
+     WHERE id=%s""", (systolic, diastolic, blood_sugar, weight, height,id))
+    db.commit()
+    cursor.close()
+
+    return redirect('/dashboard')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
