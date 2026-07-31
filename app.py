@@ -199,7 +199,7 @@ def update(id):
          diastolic=%s,
          blood_sugar_mg_dl=%s,
          weight_lb=%s,
-         height_in=%s,
+         height_in=%s
      WHERE id=%s""", (systolic, diastolic, blood_sugar, weight, height,id))
     db.commit()
     cursor.close()
