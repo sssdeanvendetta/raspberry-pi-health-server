@@ -75,7 +75,20 @@ def dashboard():
     data = cursor.fetchall()
     cursor.close()
 
+    # Calculate BMI dynamically
+    for row in data:
+        weight = row.get('weight_lb')
+        height = row.get('height_in')
+
+        if weight and height:
+            height_m = float(height) * 0.0254
+            bmi = float(weight) * 0.453592 / (height_m ** 2)
+            row['bmi'] = round(bmi, 2)
+        else:
+            row['bmi'] = None
+
     return render_template("dashboard.html", data=data)
+
 
 @app.route('/history')
 def history():
