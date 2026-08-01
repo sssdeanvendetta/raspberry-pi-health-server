@@ -54,8 +54,7 @@ def add_health():
             diastolic,
             blood_sugar,
             weight,
-            height,
-            bmi
+            height
         )
 
         return redirect('/dashboard')
