@@ -181,6 +181,8 @@ function loadData() {
          Number(item.bmi)
        );
 
+	updateBMI();
+
 
         loadChart('sugar');
 
@@ -286,7 +288,6 @@ function updateBMI() {
         averageBMI.toFixed(1);
 }
 
-updateBMI();
 
 loadData();
 
