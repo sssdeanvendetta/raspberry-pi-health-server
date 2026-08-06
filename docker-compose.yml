@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+
+  db:
+   image: mysql:8.0
+   container_name: health-db
+   environment:
+     MYSQL_ROOT_PASSWORD: rootpassword
+     MYSQL_DATABASE: health_manager
+     MYSQL_USER: health_user
+     MYSQL_PASSWORD: healthpass
+   volumes:
+    - db_data:/var/lib/mysql
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    build: .
+    container_name: health-app
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_USER: health_user
+      DB_PASSWORD: healthpass
+      DB_NAME: health_manager
+    restart: always
+
+volumes:
+  db_data:

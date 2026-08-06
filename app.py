@@ -1,16 +1,141 @@
-from flask import Flask, request, jsonify, render_template, redirect
+from flask import Flask, request, jsonify, render_template, redirect, session
+from werkzeug.security import generate_password_hash
+
+import bcrypt
+import os
+
+from functools import wraps
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+app = Flask(__name__)
+
+app.secret_key = os.getenv("SECRET_KEY")
+
+from database import db
 
 from database import (
     insert_health_data,
     get_all_health_data,
     delete_health_record,
     update_health_data,
-    get_health_record
+    get_health_record,
+    create_user,
+    get_user_by_username,
+    get_user_by_id
 )
 
-app = Flask(__name__)
 
 
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return wrapper
+
+
+
+# Login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+
+    if request.method == 'POST':
+
+        username = request.form['username']
+        password = request.form['password']
+
+        user = get_user_by_username(username)
+
+        if user and bcrypt.checkpw(
+            password.encode('utf-8'),
+            user['password_hash'].encode('utf-8')
+        ):
+
+            session['user_id'] = user['id']
+
+            return redirect('/dashboard')
+
+        return "Invalid username or password"
+
+    return render_template('login.html')
+
+# Register 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+
+    if request.method == 'POST':
+
+        username = request.form['username']
+        password = request.form['password']
+
+        create_user(username, password)
+
+        return redirect('/login')
+
+    return render_template('register.html')
+
+#logout
+@app.route('/logout')
+def logout():
+
+    session.clear()
+
+    return redirect('/login')
+
+#profile
+@app.route("/profile")
+@login_required
+def profile():
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return redirect("/login")
+
+    user = get_user_by_id(user_id)
+
+    if not user:
+        return "User not found"
+
+    return render_template("profile.html", user=user)
+
+#change password
+@app.route("/change-password", methods=["GET", "POST"])
+@login_required
+def change_password():
+
+    user_id = session.get("user_id")
+
+    if request.method == "POST":
+
+        new_password = request.form["password"]
+
+        password_hash = bcrypt.hashpw(
+            new_password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        cursor = db.cursor()
+
+        cursor.execute(
+            """
+            UPDATE users
+            SET password_hash = %s
+            WHERE id = %s
+            """,
+            (password_hash, user_id)
+        )
+
+        db.commit()
+        cursor.close()
+
+        return redirect("/profile")
+
+    return render_template("change_password.html")
 
 #Routes 
 
@@ -18,7 +143,9 @@ app = Flask(__name__)
 def home():
     return render_template("home.html")
 
+
 @app.route('/add-health', methods=['GET', 'POST'])
+@login_required
 def add_health():
 
     if request.method == 'POST':
@@ -30,21 +157,22 @@ def add_health():
         height = request.form['height']
 
         insert_health_data(
-            systolic,
-            diastolic,
-            blood_sugar,
-            weight,
-            height
-        )
-
+        systolic,
+        diastolic,
+        blood_sugar,
+        weight,
+        height,
+        session['user_id']
+)
         return redirect('/dashboard')
 
     return render_template('add_health.html')
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
 
-    data = get_all_health_data()
+    data = get_all_health_data(session['user_id'])
 
     # Calculate BMI dynamically
     for row in data:
@@ -86,9 +214,10 @@ def add_data():
 
 # Get data
 @app.route('/data')
+@login_required
 def get_data():
 
-    data = get_all_health_data(order="ASC")
+    data = get_all_health_data(session['user_id'], order="ASC")
 
     # Compute BMI dynamically
     for row in data:
@@ -131,14 +260,14 @@ def update(id):
     height = request.form['height']
 
     update_health_data(
-        id,
-        systolic,
-        diastolic,
-        blood_sugar,
-        weight,
-        height
-    )
-
+    	id,
+	systolic,
+	diastolic,
+	blood_sugar,
+	weight,
+	height,
+	session["user_id"]
+)
     return redirect('/dashboard')
 
     

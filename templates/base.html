@@ -9,9 +9,52 @@
 <body>
 
 <nav class="navbar">
-    <a href="{{ url_for('home') }}">Home</a>
-    <a href="{{ url_for('dashboard') }}">Dashboard</a>
-    <a href="{{ url_for('add_health') }}">Add Data</a>
+
+    <div class="nav-left">
+        <a href="/">Home</a>
+
+
+	{% if session.get('user_id') %}
+	   <a href="/dashboard">Dashboard</a>
+           <a href="/add-health">Add Health</a>
+	{% endif %}
+
+    </div>
+
+
+   {% if session.get('user_id') %}
+
+    <div class="profile-menu">
+
+	<button class="profile-button" onclick="toggleProfile()">
+   	        Profile 
+	</button>
+
+        <div id="profileDropdown" class="dropdown">
+
+            <a href="/profile">
+                Account
+            </a>
+
+            <a href="/change-password">
+                Change Password
+            </a>
+
+            <a href="/logout">
+                Logout
+            </a>
+
+        </div>
+
+    </div>
+
+    {% else %}
+
+        <a href="/login">Login</a>
+
+    {% endif %}
+
+
 </nav>
 
 
@@ -22,6 +65,24 @@
 
 </div>
 
+
+
+<script>
+
+function toggleProfile(){
+
+    let menu = document.getElementById(
+        "profileDropdown"
+    );
+
+    menu.style.display =
+        menu.style.display === "block"
+        ? "none"
+        : "block";
+
+}
+
+</script>
 
 </body>
 </html>
